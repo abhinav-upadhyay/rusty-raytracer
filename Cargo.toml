@@ -1,0 +1,15 @@
+[package]
+name = "raytracer"
+version = "0.1.0"
+authors = ["Abhinav Upadhyay <er.abhinav.upadhyay@gmail.com>"]
+edition = "2018"
+
+[lib]
+name = "libraytracer"
+path = "src/lib.rs"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "projectile"
+path = "src/bin/projectile.rs"
+[dependencies]
