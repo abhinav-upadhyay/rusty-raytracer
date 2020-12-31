@@ -49,14 +49,20 @@ impl Tuple {
 
 }
 
-impl Add<&Tuple> for Tuple {
+impl Add<Tuple> for Tuple {
+    type Output = Self;
+    fn add(self, _rhs: Tuple) -> Self {
+        Self {x: self.x + _rhs.x, y: self.y + _rhs.y, z: self.z + _rhs.z, w: self.w + _rhs.w}
+    }
+}
 
+impl Add<&Tuple> for Tuple {
     type Output = Self;
     fn add(self, _rhs: &Tuple) -> Self {
         Self {x: self.x + _rhs.x, y: self.y + _rhs.y, z: self.z + _rhs.z, w: self.w + _rhs.w}
     }
-
 }
+
 
 impl Sub<Tuple> for Tuple {
     type Output = Self;
