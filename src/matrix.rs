@@ -137,6 +137,23 @@ impl Matrix {
         }
         Some(inverse_mat)
     }
+
+    //specialized for 4 x 4 dimensions since raytracer requires only 3 dimensions
+    pub fn translation(x: f32, y: f32, z: f32) -> Self {
+        let mut ident = Self::identity(4);
+        ident.set(0, 3, x);
+        ident.set(1, 3, y);
+        ident.set(2, 3, z);
+        return ident;
+    }
+
+    pub fn scaling(x: f32, y: f32, z: f32) -> Self {
+        let mut ident = Self::identity(4);
+        ident.set(0, 0, x);
+        ident.set(1, 1, y);
+        ident.set(2, 2, z);
+        return ident;
+    }
 }
 
 impl Index<(usize, usize)> for Matrix {
@@ -523,6 +540,59 @@ mod tests{
         let c = (&a * &b).unwrap();
         let inv = b.inverse().unwrap();
         assert_eq!((c * inv).unwrap(), a);
+    }
+
+    #[test]
+    fn test_translate() {
+        let transform = Matrix::translation(5.0, -3.0, 2.0);
+        let p = Tuple::point(-3.0, 4.0, 5.0);
+        assert_eq!((transform * p).unwrap(), Tuple::point(2.0, 1.0, 7.0));
+    }
+
+    #[test]
+    fn test_inverse_translate() {
+        let transform = Matrix::translation(5.0, -3.0, 2.0);
+        let inv = transform.inverse().unwrap();
+        let p = Tuple::point(-3.0, 4.0, 5.0);
+        assert_eq!((inv * p).unwrap(), Tuple::point(-8.0, 7.0, 3.0));
+    }
+
+    #[test]
+    fn test_translate_vector() {
+        let transform = Matrix::translation(5.0, -3.0, 2.0);
+        let v = Tuple::vector(-3.0, 4.0, 5.0);
+        assert_eq!((&transform * &v).unwrap(), v);
+    }
+
+    #[test]
+    fn test_scaling_point() {
+        let transform = Matrix::scaling(2.0, 3.0, 4.0);
+        let p = Tuple::point(-4.0, 6.0, 8.0);
+        assert_eq!((transform * p).unwrap(), Tuple::point(-8.0, 18.0, 32.0));
+    }
+
+    #[test]
+    fn test_scaling_vector() {
+        let transform = Matrix::scaling(2.0, 3.0, 4.0);
+        let v = Tuple::vector(-4.0, 6.0, 8.0);
+        assert_eq!((transform * v).unwrap(), Tuple::vector(-8.0, 18.0, 32.0));
+
+    }
+
+    #[test]
+    fn test_inverse_scaling() {
+        let transform = Matrix::scaling(2.0, 3.0, 4.0);
+        let v = Tuple::vector(-4.0, 6.0, 8.0);
+        let inv = transform.inverse().unwrap();
+        assert_eq!((inv * v).unwrap(), Tuple::vector(-2.0, 2.0, 2.0));
+
+    }
+
+    #[test]
+    fn test_reflection() {
+        let transform = Matrix::scaling(-1.0, 1.0, 1.0);
+        let p = Tuple::point(2.0, 3.0, 4.0);
+        assert_eq!((transform * p).unwrap(), Tuple::point(-2.0, 3.0, 4.0));
     }
 
 }
