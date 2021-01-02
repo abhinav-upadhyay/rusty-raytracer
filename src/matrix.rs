@@ -72,6 +72,71 @@ impl Matrix {
         }
         transpose
     }
+
+    //TODO: determinant is only defined for square matrices, maybe we need to return a Result?
+    pub fn det(&self) -> f32 {
+        if self.nrows == 2 && self.ncols == 2 {
+            return self.vals[0] * self.vals[3] - self.vals[1] * self.vals[2]
+        }
+        let rowid = 0;
+        let mut det = 0.0;
+        for i in 0..self.ncols {
+            det += self[(rowid, i)] * self.cofactor(rowid, i);
+        }
+        return det;
+    }
+
+    pub fn submatrix(&self, row: usize, col: usize) -> Self {
+        let mut submat = Matrix::new(self.nrows - 1, self.ncols - 1);
+        let mut rowid = 0;
+        for i in 0..self.nrows {
+            let mut colid = 0;
+            if i == row {
+                continue;
+            }
+            for j in 0..self.ncols {
+                if j == col {
+                    continue;
+                }
+                submat.set(rowid, colid, self[(i, j)]);
+                colid += 1;
+            }
+            rowid += 1;
+        }
+        return submat;
+    }
+
+    pub fn minor(&self, row: usize, col: usize) -> f32 {
+        let subm = self.submatrix(row, col);
+        return subm.det();
+    }
+
+    pub fn cofactor(&self, row: usize, col: usize) -> f32 {
+        let minor_val = self.minor(row, col);
+        if (row + col) % 2 != 0 {
+            return -minor_val;
+        }
+        minor_val
+    }
+
+    pub fn is_invertible(&self) -> bool {
+        self.det() != 0.0
+    }
+
+    pub fn inverse(&self) -> Option<Self> {
+        let det = self.det();
+        if det == 0.0 {
+            return None;
+        }
+        let mut inverse_mat = Self::new(self.nrows, self.ncols);
+        for i in 0..self.nrows {
+            for j in 0..self.ncols {
+                let c = self.cofactor(i, j);
+                inverse_mat.set(j, i, c / det);
+            }
+        }
+        Some(inverse_mat)
+    }
 }
 
 impl Index<(usize, usize)> for Matrix {
@@ -311,6 +376,153 @@ mod tests{
         let ident = Matrix::identity(4);
         assert_eq!(ident.transpose(), ident);
     }
-    
+
+    #[test]
+    fn test_det() {
+        let a = Matrix::from_array(2, 2, &[1.0, 5.0, -3.0, 2.0]).unwrap();
+        assert_eq!(a.det(), 17.0);
+    }
+
+    #[test]
+    fn test_submat1() {
+        let a = Matrix::from_array(3, 3, &[1.0, 5.0, 0.0,
+            -3.0, 2.0, 7.0,
+            0.0, 6.0, -3.0]).unwrap();
+        let expected_submat = Matrix::from_array(2, 2, &[-3.0, 2.0, 0.0, 6.0]).unwrap();
+        assert_eq!(a.submatrix(0, 2), expected_submat);
+    }
+
+    #[test]
+    fn test_submat2() {
+        let a = Matrix::from_array(4, 4, &[-6.0, 1.0, 1.0, 6.0,
+            -8.0, 5.0, 8.0, 6.0,
+            -1.0, 0.0, 8.0, 2.0,
+            -7.0, 1.0, -1.0, 1.0]).unwrap();
+        let expected_sumat = Matrix::from_array(3, 3, &[-6.0, 1.0, 6.0,
+            -8.0, 8.0, 6.0,
+            -7.0, -1.0, 1.0]).unwrap();
+        assert_eq!(a.submatrix(2, 1), expected_sumat);
+    }
+
+    #[test]
+    fn test_minor() {
+        let a = Matrix::from_array(3, 3, &[3.0, 5.0, 0.0,
+            2.0, -1.0, -7.0,
+            6.0, -1.0, 5.0]).unwrap();
+        let b = a.submatrix(1, 0);
+        assert_eq!(b.det(), a.minor(1, 0));
+    }
+
+    #[test]
+    fn test_cofactor() {
+        let a = Matrix::from_array(3, 3, &[3.0, 5.0, 0.0,
+            2.0, -1.0, -7.0,
+            6.0, -1.0, 5.0]).unwrap();
+        assert_eq!(a.minor(0, 0), -12.0);
+        assert_eq!(a.cofactor(0, 0), -12.0);
+        assert_eq!(a.minor(1, 0), 25.0);
+        assert_eq!(a.cofactor(1, 0), -25.0);
+    }
+
+    #[test]
+    fn test_det_3_by_3() {
+        let a = Matrix::from_array(3, 3, &[1.0, 2.0, 6.0,
+            -5.0, 8.0, -4.0,
+            2.0, 6.0, 4.0]).unwrap();
+        assert_eq!(a.cofactor(0, 0), 56.0);
+        assert_eq!(a.cofactor(0, 1), 12.0);
+        assert_eq!(a.cofactor(0, 2), -46.0);
+        assert_eq!(a.det(), -196.0);
+    }
+
+    #[test]
+    fn test_det_4_by_4() {
+        let a = Matrix::from_array(4, 4, &[-2.0, -8.0, 3.0, 5.0,
+            -3.0, 1.0, 7.0, 3.0,
+            1.0, 2.0, -9.0, 6.0,
+            -6.0, 7.0, 7.0, -9.0]).unwrap();
+        assert_eq!(a.cofactor(0, 0), 690.0);
+        assert_eq!(a.cofactor(0, 1), 447.0);
+        assert_eq!(a.cofactor(0, 2), 210.0);
+        assert_eq!(a.cofactor(0, 3), 51.0);
+        assert_eq!(a.det(), -4071.0);
+    }
+
+    #[test]
+    fn test_invertibility() {
+        let mat1 = Matrix::from_array(4, 4, &[6.0, 4.0, 4.0, 4.0,
+            5.0, 5.0, 7.0, 6.0,
+            4.0, -9.0, 3.0, -7.0,
+            9.0, 1.0, 7.0, -6.0]).unwrap();
+        assert_eq!(mat1.is_invertible(), true);
+
+        let mat2 = Matrix::from_array(4, 4, &[-4.0, 2.0, -2.0, -3.0,
+            9.0, 6.0, 2.0, 6.0,
+            0.0, -5.0, 1.0, -5.0,
+            0.0, 0.0, 0.0, 0.0]).unwrap();
+        assert_eq!(mat2.is_invertible(), false);
+    }
+
+    #[test]
+    fn test_inverse1() {
+        let a = Matrix::from_array(4, 4, &[-5.0, 2.0, 6.0, -8.0,
+            1.0, -5.0, 1.0, 8.0,
+            7.0, 7.0, -6.0, -7.0,
+            1.0, -3.0, 7.0, 4.0]).unwrap();
+        let b = a.inverse().unwrap();
+        let expected_inverse = Matrix::from_array(4, 4, &[
+            0.21805, 0.45113, 0.24060, -0.04511,
+            -0.80827, -1.45677, -0.44361, 0.52068,
+            -0.07895, -0.22368, -0.05263, 0.19737,
+            -0.52256, -0.81391, -0.30075, 0.30639 
+        ]).unwrap();
+        assert_eq!(a.det(), 532.0);
+        assert_eq!(a.cofactor(2, 3), -160.0);
+        assert_eq!(b[(3, 2)], -160.0 / 532.0);
+        assert_eq!(a.cofactor(3, 2), 105.0);
+        assert_eq!(b[(2, 3)], 105.0 / 532.0);
+        assert_eq!(b, expected_inverse);
+    }
+
+    #[test]
+    fn test_inverse2() {
+        let a = Matrix::from_array(4, 4, &[8.0, -5.0, 9.0, 2.0,
+            7.0, 5.0, 6.0, 1.0,
+            -6.0, 0.0, 9.0, 6.0,
+            -3.0, 0.0, -9.0, -4.0]).unwrap();
+        let expected_inverse = Matrix::from_array(4, 4, &[-0.15385, -0.15385, -0.28205, -0.53846,
+            -0.07692, 0.12308, 0.02564, 0.03077,
+            0.35897, 0.35897, 0.43590, 0.92308,
+            -0.69231, -0.69231, -0.76923, -1.92308]).unwrap();
+        assert_eq!(a.inverse().unwrap(), expected_inverse);
+    }
+
+    #[test]
+    fn test_inverse3() {
+        let a = Matrix::from_array(4, 4, &[9.0, 3.0, 0.0, 9.0,
+            -5.0, -2.0, -6.0, -3.0,
+            -4.0, 9.0, 6.0, 4.0,
+            -7.0, 6.0, 6.0, 2.0]).unwrap();
+        let expected_inverse = Matrix::from_array(4, 4, &[-0.040704, -0.07778, 0.14444, -0.22222,
+            -0.07778, 0.03333, 0.36667, -0.33333,
+            -0.02901, -0.14630, -0.10926, 0.12963,
+            0.17778, 0.06667, -0.26667, 0.33333]).unwrap();
+        assert_eq!(a.inverse().unwrap(), expected_inverse);
+    }
+
+    #[test]
+    fn test_inverse4() {
+        let a = Matrix::from_array(4, 4, &[3.0, -9.0, 7.0, 3.0,
+            3.0, -8.0, 2.0, -9.0,
+            -4.0, 4.0, 4.0, 1.0,
+            -6.0, 5.0, -1.0, 1.0]).unwrap();
+        let b = Matrix::from_array(4, 4, &[8.0, 2.0, 2.0, 2.0,
+            3.0, -1.0, 7.0, 0.0,
+            7.0, 0.0, 5.0, 4.0,
+            6.0, -2.0, 0.0, 5.0]).unwrap();
+        let c = (&a * &b).unwrap();
+        let inv = b.inverse().unwrap();
+        assert_eq!((c * inv).unwrap(), a);
+    }
 
 }
