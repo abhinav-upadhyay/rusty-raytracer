@@ -13,6 +13,11 @@ pub struct Tuple {
 
 
 impl Tuple {
+
+    pub fn new(x: f32, y: f32, z: f32, w: f32) -> Self {
+        Self {x, y, z, w}
+    }
+
     pub fn point(x: f32, y: f32, z: f32) -> Self {
         Self{x, y, z, w: 1.0f32}
     }
@@ -45,6 +50,10 @@ impl Tuple {
 
     pub fn z(&self) -> f32 {
         self.z
+    }
+
+    pub fn w(&self) -> f32 {
+        self.w
     }
 
 }
