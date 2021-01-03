@@ -1,9 +1,11 @@
 use std::ops::{Add, Sub, Neg, Mul, Div};
+use std::cmp::PartialEq;
+use super::utils;
 
 //TODO: maybe we can just create two structs point and vector
 // that will allow us to enforce the addition/subtraction limits
 // for example point + point doesn't make sense and should not be allowed
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct Tuple {
     x: f32,
     y: f32,
@@ -55,7 +57,15 @@ impl Tuple {
     pub fn w(&self) -> f32 {
         self.w
     }
+}
 
+impl PartialEq for Tuple {
+    fn eq(&self, other: &Self) -> bool {
+        if self.w != other.w {
+            return false;
+        }
+        utils::is_equal(self.x, other.x) && utils::is_equal(self.y, other.y) && utils::is_equal(self.z, other.z)
+    }
 }
 
 impl Add<Tuple> for Tuple {
