@@ -12,4 +12,9 @@ path = "src/lib.rs"
 [[bin]]
 name = "projectile"
 path = "src/bin/projectile.rs"
+
+[[bin]]
+name = "clock"
+path = "src/bin/clock.rs"
+
 [dependencies]
