@@ -5,7 +5,7 @@ use super::utils;
 //TODO: maybe we can just create two structs point and vector
 // that will allow us to enforce the addition/subtraction limits
 // for example point + point doesn't make sense and should not be allowed
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Tuple {
     x: f32,
     y: f32,
@@ -65,6 +65,18 @@ impl PartialEq for Tuple {
             return false;
         }
         utils::is_equal(self.x, other.x) && utils::is_equal(self.y, other.y) && utils::is_equal(self.z, other.z)
+    }
+}
+
+impl PartialEq<&Tuple> for Tuple {
+    fn eq(&self, other: &&Self) -> bool {
+        return self == *other;
+    }
+}
+
+impl<'a> PartialEq<Tuple> for &'a Tuple {
+    fn eq(&self, other: &Tuple) -> bool {
+        *self == other
     }
 }
 
