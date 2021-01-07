@@ -102,6 +102,13 @@ impl Sub<Tuple> for Tuple {
     }
 }
 
+impl<'a> Sub<&'a Tuple> for &'a Tuple {
+    type Output = Tuple;
+    fn sub(self, _rhs: Self) -> Tuple {
+        *self - *_rhs
+    }
+}
+
 impl Neg for Tuple {
     type Output = Self;
     fn neg(self) -> Self {
