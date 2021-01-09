@@ -1,9 +1,9 @@
 use super::ray::Ray;
 use super::tuple::Tuple;
-use super::intersection::{Intersect, Intersection};
+use super::intersection::{Intersect, Intersection, Intersections};
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Sphere {
     id: i32
 }
@@ -16,7 +16,7 @@ impl Sphere {
 }
 
 impl Intersect<Self> for Sphere {
-    fn intersect(&self, ray: &Ray) -> Vec<Intersection<Self>> {
+    fn intersect(&self, ray: &Ray) -> Intersections<Self> {
         let sphere_to_ray = ray.origin() - &Tuple::point(0.0, 0.0, 0.0);
         let a = ray.direction().dot(ray.direction());
         let b = 2.0 * ray.direction().dot(&sphere_to_ray);
@@ -24,20 +24,19 @@ impl Intersect<Self> for Sphere {
         let discriminant = b * b - 4.0 * a * c;
 
         if discriminant < 0.0 {
-            return Vec::new();
+            return Intersections::new_empty();
         }
-        let mut xs = Vec::with_capacity(2);
+        let mut xs = Intersections::with_capacity(2);
         let x1 = (-b - discriminant.sqrt()) / (2.0 * a);
         let x2 = (-b + discriminant.sqrt()) / (2.0 * a);
         if x1 < x2 {
-            xs.push(Intersection::new(self, x1));
-            xs.push(Intersection::new(self, x2));
+            xs.add_point(Intersection::new(self, x1));
+            xs.add_point(Intersection::new(self, x2));
         } else {
-            xs.push(Intersection::new(self, x2));
-            xs.push(Intersection::new(self, x1));
+            xs.add_point(Intersection::new(self, x2));
+            xs.add_point(Intersection::new(self, x1));
         }
         return xs;
-
     }
 }
 
