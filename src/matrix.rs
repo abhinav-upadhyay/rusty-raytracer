@@ -3,7 +3,7 @@ use std::cmp::PartialEq;
 use super::utils;
 use super::tuple::Tuple;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Matrix {
     nrows: usize,
     ncols: usize,

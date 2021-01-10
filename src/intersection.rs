@@ -142,7 +142,7 @@ mod tests {
         let s = Sphere::new(1);
         let i1 = Intersection::new(&s, 1.0);
         let i2 = Intersection::new(&s, 2.0);
-        let xs = Intersections::new(vec![i1, i2]);
+        let xs = Intersections::new(vec![i1.clone(), i2]);
         let h = xs.hit().unwrap();
         assert_eq!(*h, Reverse(i1));
     }

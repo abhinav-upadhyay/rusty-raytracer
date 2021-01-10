@@ -1,25 +1,32 @@
 use super::ray::Ray;
 use super::tuple::Tuple;
+use super::matrix::Matrix;
 use super::intersection::{Intersect, Intersection, Intersections};
 
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Sphere {
+    transform: Matrix,
     id: i32
 }
 
 impl Sphere {
     pub fn new(id: i32) -> Self {
-        Self{id}
+        Self{id, transform: Matrix::identity(4)}
+    }
+
+    pub fn set_transform(&mut self, transform: Matrix) {
+        self.transform = transform;
     }
 
 }
 
 impl Intersect<Self> for Sphere {
     fn intersect(&self, ray: &Ray) -> Intersections<Self> {
-        let sphere_to_ray = ray.origin() - &Tuple::point(0.0, 0.0, 0.0);
-        let a = ray.direction().dot(ray.direction());
-        let b = 2.0 * ray.direction().dot(&sphere_to_ray);
+        let transformed_ray = ray.transform(&self.transform.inverse().unwrap());
+        let sphere_to_ray = transformed_ray.origin() - &Tuple::point(0.0, 0.0, 0.0);
+        let a = transformed_ray.direction().dot(transformed_ray.direction());
+        let b = 2.0 * transformed_ray.direction().dot(&sphere_to_ray);
         let c = sphere_to_ray.dot(&sphere_to_ray) - 1.0;
         let discriminant = b * b - 4.0 * a * c;
 
@@ -43,6 +50,7 @@ impl Intersect<Self> for Sphere {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::super::transform::TransformBuilder;
 
     #[test]
     fn test_ray_intersection() {
@@ -92,6 +100,40 @@ mod tests {
         assert_eq!(intersections.len(), 2);
         assert_eq!(intersections[0].point(), -6.0);
         assert_eq!(intersections[1].point(), -4.0);
+    }
+
+    #[test]
+    fn test_transform() {
+        let s = Sphere::new(1);
+        assert_eq!(s.transform, Matrix::identity(4));
+    }
+
+    #[test]
+    fn test_set_transform() {
+        let mut s = Sphere::new(1);
+        let transform = TransformBuilder::new(4).translate(2.0, 3.0, 4.0).build();
+        s.set_transform(transform.clone());
+        assert_eq!(s.transform, transform);
+    }
+
+    #[test]
+    fn test_scaled_sphere_ray_intersection() {
+        let r = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let mut s = Sphere::new(1);
+        s.set_transform(TransformBuilder::new(4).scale(2.0, 2.0, 2.0).build());
+        let xs = s.intersect(&r);
+        assert_eq!(xs.len(), 2);
+        assert_eq!(xs[0].point(), 3.0);
+        assert_eq!(xs[1].point(), 7.0);
+    }
+
+    #[test]
+    fn test_translated_sphere_ray_intersection() {
+        let r = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+        let mut s = Sphere::new(1);
+        s.set_transform(TransformBuilder::new(4).translate(5.0, 0.0, 0.0).build());
+        let xs = s.intersect(&r);
+        assert_eq!(xs.len(), 0);
     }
 
 }
