@@ -17,4 +17,8 @@ path = "src/bin/projectile.rs"
 name = "clock"
 path = "src/bin/clock.rs"
 
+[[bin]]
+name = "sphere"
+path = "src/bin/sphere_cast.rs"
+
 [dependencies]
