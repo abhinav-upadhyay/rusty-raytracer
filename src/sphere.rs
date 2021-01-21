@@ -19,6 +19,15 @@ impl Sphere {
         self.transform = transform;
     }
 
+    pub fn normal_at(&self, point: Tuple) -> Tuple {
+        let transform_inverse = self.transform.inverse().unwrap();
+        let object_point = (&transform_inverse * &point).unwrap();
+        let object_normal = object_point - Tuple::point(0.0, 0.0, 0.0);
+        let world_normal = (transform_inverse.transpose() * object_normal).unwrap();
+        let world_normal_vector = Tuple::vector(world_normal.x(), world_normal.y(), world_normal.z());
+        return world_normal_vector.normalize();
+    }
+
 }
 
 impl Intersect<Self> for Sphere {
@@ -29,7 +38,6 @@ impl Intersect<Self> for Sphere {
         let b = 2.0 * transformed_ray.direction().dot(&sphere_to_ray);
         let c = sphere_to_ray.dot(&sphere_to_ray) - 1.0;
         let discriminant = b * b - 4.0 * a * c;
-
         if discriminant < 0.0 {
             return Intersections::new_empty();
         }
@@ -134,6 +142,53 @@ mod tests {
         s.set_transform(TransformBuilder::new(4).translate(5.0, 0.0, 0.0).build());
         let xs = s.intersect(&r);
         assert_eq!(xs.len(), 0);
+    }
+
+    #[test]
+    fn test_normal_at_x() {
+        let s = Sphere::new(1);
+        let n = s.normal_at(Tuple::point(1.0, 0.0, 0.0));
+        assert_eq!(n, Tuple::vector(1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn test_normal_at_y() {
+        let s = Sphere::new(1);
+        let n = s.normal_at(Tuple::point(0.0, 1.0, 0.0));
+        assert_eq!(n, Tuple::vector(0.0, 1.0, 0.0));
+    }
+
+    #[test]
+    fn test_normal_at_z() {
+        let s= Sphere::new(1);
+        let n = s.normal_at(Tuple::point(0.0, 0.0, 1.0));
+        assert_eq!(n, Tuple::vector(0.0, 0.0, 1.0));
+    }
+
+    #[test]
+    fn test_normal_at_nonaxial() {
+        let s = Sphere::new(1);
+        let v = 3.0f32.sqrt() / 3.0;
+        let n = s.normal_at(Tuple::point(v, v, v));
+        assert_eq!(n, Tuple::vector(v, v, v));
+        assert_eq!(n, n.normalize());
+    }
+
+    #[test]
+    fn test_normal_translated_sphere() {
+        let mut s = Sphere::new(1);
+        s.set_transform(TransformBuilder::new(4).translate(0.0, 1.0, 0.0).build());
+        let n = s.normal_at(Tuple::point(0.0, 1.70711, -0.70711));
+        assert_eq!(n, Tuple::vector(0.0, 0.70711, -0.70711));
+    }
+
+    #[test]
+    fn test_normal_transformed_sphere() {
+        let mut s = Sphere::new(1);
+        s.set_transform(TransformBuilder::new(4).rotate_z(std::f32::consts::PI / 5.0).scale(1.0, 0.5, 1.0).build());
+        let v = 2.0f32.sqrt() / 2.0;
+        let n = s.normal_at(Tuple::point(0.0, v, v));
+        assert_eq!(n, Tuple::vector(0.0, 0.97014254, 0.24253564));
     }
 
 }
