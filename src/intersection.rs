@@ -58,8 +58,11 @@ impl<'a, T: PartialEq + Clone> Intersections<'a, T> {
         }
     }
 
-    pub fn hit(&self) -> Option<&Reverse<Intersection<'a, T>>> {
-        self.pos_intersections.peek()
+    pub fn hit(&self) -> Option<&Intersection<'a, T>> {
+        match self.pos_intersections.peek() {
+            Some(p) => Some(&p.0),
+            None => None
+        }
     }
 
     pub fn len(&self) -> usize {
@@ -144,7 +147,7 @@ mod tests {
         let i2 = Intersection::new(&s, 2.0);
         let xs = Intersections::new(vec![i1.clone(), i2]);
         let h = xs.hit().unwrap();
-        assert_eq!(*h, Reverse(i1));
+        assert_eq!(*h, i1);
     }
 
     #[test]
@@ -154,7 +157,7 @@ mod tests {
         let i2 = Intersection::new(&s, 1.0);
         let xs = Intersections::new(vec![i1.clone(), i2.clone()]);
         let h = xs.hit().unwrap();
-        assert_eq!(*h, Reverse(i2));
+        assert_eq!(*h, i2);
     }
 
     #[test]
@@ -176,7 +179,7 @@ mod tests {
         let i4 = Intersection::new(&s, 2.0);
         let xs = Intersections::new(vec![i3.clone(), i4.clone(), i1.clone(), i2.clone()]);
         let h = xs.hit().unwrap();
-        assert_eq!(*h, Reverse(i4));
+        assert_eq!(*h, i4);
 
     }
 
