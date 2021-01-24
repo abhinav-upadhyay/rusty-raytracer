@@ -42,6 +42,10 @@ impl Tuple {
         self.x * other.x + self.y * other.y + self.z * other.z + self.w * other.w
     }
 
+    pub fn reflect(&self, normal: &Tuple) -> Self {
+        return self - &(normal * 2.0 * self.dot(normal));
+    }
+
     pub fn x(&self) -> f32 {
         self.x
     }
@@ -121,6 +125,13 @@ impl Mul<f32> for Tuple {
     type Output = Self;
     fn mul(self, _rhs: f32) -> Self {
         Self{x:  self.x * _rhs, y: self.y * _rhs, z: self.z * _rhs, w: self.w}
+    }
+}
+
+impl Mul<f32> for &Tuple {
+    type Output = Tuple;
+    fn mul(self, _rhs: f32) -> Tuple {
+        Tuple{x: self.x * _rhs, y: self.y * _rhs, z: self.z * _rhs, w: self.w}
     }
 }
 
@@ -406,6 +417,23 @@ mod tests {
         let v1 = Tuple::vector(1.0, 2.0, 3.0);
         let v2 = Tuple::vector(2.0, 3.0, 4.0);
         assert_eq!(v2 * v1, Tuple::vector(1.0, -2.0, 1.0));
+    }
+
+    #[test]
+    fn test_reflect_45_degrees() {
+        let v = Tuple::vector(1.0, -1.0, 0.0);
+        let n = Tuple::vector(0.0, 1.0, 0.0);
+        let expected_reflection = Tuple::vector(1.0, 1.0, 0.0);
+        assert_eq!(v.reflect(&n), expected_reflection);
+    }
+
+    #[test]
+    fn test_reflect_slanted_surface() {
+        let v = Tuple::vector(0.0, -1.0, 0.0);
+        let val = 2f32.sqrt() / 2.0;
+        let n = Tuple::vector(val, val, 0.0);
+        let expected_reflection = Tuple::vector(1.0, 0.0, 0.0);
+        assert_eq!(v.reflect(&n), expected_reflection);
     }
 
 }
