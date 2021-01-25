@@ -1,8 +1,9 @@
 use std::ops::{Add, Sub, Mul};
 use std::fmt::{Display, Debug, Formatter, Result as FmtResult};
 use std::cmp;
+use super::utils;
 
-#[derive(PartialEq, Clone)]
+#[derive(Clone)]
 pub struct Color {
     red: f32,
     green: f32,
@@ -12,6 +13,10 @@ pub struct Color {
 impl Color {
     pub fn new(red: f32, green: f32, blue: f32) -> Self {
         Self {red, green, blue}
+    }
+
+    pub fn black() -> Self {
+        Self {red: 0.0, green: 0.0, blue: 0.0}
     }
 
     pub fn red(&self) -> f32 {
@@ -55,10 +60,24 @@ impl Mul<Color> for Color {
     }
 }
 
+impl Mul<&Color> for &Color {
+    type Output = Color;
+    fn mul(self, _rhs: &Color) -> Color {
+        Color {red: self.red * _rhs.red, green: self.green * _rhs.green, blue: self.blue * _rhs.blue}
+    }
+}
+
 impl Mul<f32> for Color {
     type Output = Color;
     fn mul(self, _rhs: f32) -> Self {
         Self {red: self.red * _rhs, green: self.green * _rhs, blue: self.blue * _rhs}
+    }
+}
+
+impl Mul<f32> for &Color {
+    type Output = Color;
+    fn mul(self, _rhs: f32) -> Color {
+        Color {red: self.red * _rhs, green: self.green * _rhs, blue: self.blue * _rhs}
     }
 }
 
@@ -73,6 +92,14 @@ impl Debug for Color {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         let (r, g, b) = self.scale_color();
         write!(fmt, "{} {} {}", r, g, b)
+    }
+}
+
+impl PartialEq for Color {
+    fn eq(&self, other: &Self) -> bool {
+        return utils::is_equal(self.red, other.red) &&
+            utils::is_equal(self.green, other.green) &&
+            utils::is_equal(self.blue, other.blue);
     }
 }
 

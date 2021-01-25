@@ -1,32 +1,26 @@
 use super::ray::Ray;
 use super::tuple::Tuple;
 use super::matrix::Matrix;
+use super::material::Material;
 use super::intersection::{Intersect, Intersection, Intersections};
 
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Sphere {
     transform: Matrix,
+    pub material: Material,
     id: i32
 }
 
 impl Sphere {
     pub fn new(id: i32) -> Self {
-        Self{id, transform: Matrix::identity(4)}
+        Self{id, transform: Matrix::identity(4), material: Material::new()}
     }
 
     pub fn set_transform(&mut self, transform: Matrix) {
         self.transform = transform;
     }
 
-    pub fn normal_at(&self, point: Tuple) -> Tuple {
-        let transform_inverse = self.transform.inverse().unwrap();
-        let object_point = (&transform_inverse * &point).unwrap();
-        let object_normal = object_point - Tuple::point(0.0, 0.0, 0.0);
-        let world_normal = (transform_inverse.transpose() * object_normal).unwrap();
-        let world_normal_vector = Tuple::vector(world_normal.x(), world_normal.y(), world_normal.z());
-        return world_normal_vector.normalize();
-    }
 
 }
 
@@ -52,6 +46,15 @@ impl Intersect<Self> for Sphere {
             xs.add_point(Intersection::new(self, x1));
         }
         return xs;
+    }
+
+    fn normal_at(&self, point: Tuple) -> Tuple {
+        let transform_inverse = self.transform.inverse().unwrap();
+        let object_point = (&transform_inverse * &point).unwrap();
+        let object_normal = object_point - Tuple::point(0.0, 0.0, 0.0);
+        let world_normal = (transform_inverse.transpose() * object_normal).unwrap();
+        let world_normal_vector = Tuple::vector(world_normal.x(), world_normal.y(), world_normal.z());
+        return world_normal_vector.normalize();
     }
 }
 
@@ -189,6 +192,22 @@ mod tests {
         let v = 2.0f32.sqrt() / 2.0;
         let n = s.normal_at(Tuple::point(0.0, v, v));
         assert_eq!(n, Tuple::vector(0.0, 0.97014254, 0.24253564));
+    }
+
+    #[test]
+    fn test_sphere_default_material() {
+        let s = Sphere::new(1);
+        let m = s.material;
+        assert_eq!(m, Material::new())
+    }
+
+    #[test]
+    fn test_sphere_matterial_assignment() {
+        let mut s = Sphere::new(1);
+        let mut m = Material::new();
+        m.ambient = 1.0;
+        s.material = m.clone();
+        assert_eq!(s.material, m);
     }
 
 }

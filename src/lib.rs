@@ -7,6 +7,8 @@ pub mod transform;
 pub mod ray;
 pub mod sphere;
 pub mod intersection;
+pub mod light;
+pub mod material;
 
 pub use tuple::Tuple;
 pub use color::Color;
@@ -16,3 +18,5 @@ pub use transform::TransformBuilder;
 pub use ray::Ray;
 pub use sphere::Sphere;
 pub use intersection::Intersect;
+pub use light::PointLight;
+pub use material::Material;

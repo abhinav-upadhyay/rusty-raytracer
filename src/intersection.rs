@@ -2,10 +2,12 @@ use std::cmp::{Ord, PartialEq, PartialOrd, Ordering, Eq, Reverse};
 use std::ops::Index;
 use std::collections::BinaryHeap;
 use super::ray::Ray;
+use super::tuple::Tuple;
 use super::utils;
 
 pub trait Intersect<T: PartialEq + Clone> {
     fn intersect(&self, ray: &Ray) -> Intersections<T>;
+    fn normal_at(&self, point: Tuple) -> Tuple;
 }
 
 #[derive(Debug, Copy, Clone)]
